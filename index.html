@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>OBISL CAMPUS Gamified Learning - Financial Literacy</title>
+    <!-- Tailwind CSS for utility-first responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #081125;
+            color: #f8f9fa;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            overflow: hidden;
+        }
+        /* Premium custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f1c3f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffc107;
+            border-radius: 4px;
+        }
+        .scroller {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ffc107 #0f1c3f;
+        }
+        /* Micro-interactions: Pulse effects */
+        @keyframes subtlePulse {
+            0%, 100% { transform: scale(1); opacity: 0.95; }
+            50% { transform: scale(1.03); opacity: 1; }
+        }
+        .pulse-accent {
+            animation: subtlePulse 2s infinite ease-in-out;
+        }
+        /* Custom ranges for modern aesthetics */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffc107;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 193, 7, 0.6);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col justify-between overflow-hidden">
+
+<!-- Main Application Layout Wrapper -->
+<div class="h-full w-full flex flex-col justify-between overflow-hidden">
+    
+    <!-- 1. Fixed App Header (6vh) -->
+    <header class="h-[6vh] bg-[#0b1b3d] border-b border-[#1e3a8a] px-4 flex items-center justify-between z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-[#ffc107] rounded-md flex items-center justify-center font-black text-[#0b1b3d] text-[10px]">OBI</div>
+            <span class="font-extrabold text-xs sm:text-sm tracking-wider text-white">OBISL CAMPUS <span class="text-[#ffc107]">Gamified Learning</span></span>
+        </div>
+        <!-- Language Switcher -->
+        <div class="flex items-center gap-1 bg-[#071125] border border-[#1e3a8a] rounded-full p-0.5">
+            <button id="lang-btn-en" onclick="setLanguage('en')" class="px-2 py-0.5 rounded-full text-[10px] font-bold transition-all bg-[#ffc107] text-[#0b1b3d]">ENG</button>
+            <button id="lang-btn-si" onclick="setLanguage('si')" class="px-2 py-0.5 rounded-full text-[10px] font-bold transition-all text-gray-400">සිංහල</button>
+        </div>
+    </header>
+
+    <!-- 2. Dynamic Slide Navigation Bar (5vh) -->
+    <nav class="h-[5vh] bg-[#091530] border-b border-[#1e3a8a] flex items-center justify-around px-1 z-40">
+        <button id="tab-0" onclick="switchStep(0)" class="flex-1 py-1 text-center text-[10px] sm:text-xs font-semibold border-b-2 border-[#ffc107] text-[#ffc107] transition-all truncate">
+            <span id="tab-0-text" data-trn="tab-1">Record vs Strategy</span>
+        </button>
+        <button id="tab-1" onclick="switchStep(1)" class="flex-1 py-1 text-center text-[10px] sm:text-xs font-semibold border-b-2 border-transparent text-gray-400 transition-all truncate">
+            <span id="tab-1-text" data-trn="tab-2">Equation</span>
+        </button>
+        <button id="tab-2" onclick="switchStep(2)" class="flex-1 py-1 text-center text-[10px] sm:text-xs font-semibold border-b-2 border-transparent text-gray-400 transition-all truncate">
+            <span id="tab-2-text" data-trn="tab-3">Liquidity Act</span>
+        </button>
+        <button id="tab-3" onclick="switchStep(3)" class="flex-1 py-1 text-center text-[10px] sm:text-xs font-semibold border-b-2 border-transparent text-gray-400 transition-all truncate">
+            <span id="tab-3-text" data-trn="tab-4">Budget Pivot</span>
+        </button>
+    </nav>
+
+    <!-- 3. Top Viewport (38vh): Interactive Canvas Simulation -->
+    <div class="h-[38vh] bg-[#071125] relative overflow-hidden flex items-center justify-center">
+        <canvas id="game-canvas" class="w-full h-full block"></canvas>
+        
+        <!-- Instructional overlays embedded dynamically -->
+        <div id="canvas-hint" class="absolute top-2 left-2 bg-[#0b1b3d]/90 border border-[#1e3a8a] rounded px-2 py-1 text-[9px] text-gray-300 pointer-events-none">
+            <span id="hint-desc" data-trn="canvas-instruction-drag">Drag items to their correct operational bays</span>
+        </div>
+
+        <!-- Success Feedback Toast Overlay -->
+        <div id="success-overlay" class="absolute inset-0 bg-[#10b981]/15 opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-center">
+            <div class="bg-[#0b1b3d]/95 border border-[#10b981] rounded-xl px-4 py-2 flex items-center gap-2 transform scale-75 transition-all duration-300 shadow-2xl" id="success-toast">
+                <span class="text-[#10b981] text-lg">✔</span>
+                <span class="text-white text-xs font-bold" data-trn="task-completed">TASK COMPLETED SUCCESSFULLY!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Bottom Viewport (51vh): Scroll Container Housing Conceptual Content Cards -->
+    <main id="slide-container" class="h-[51vh] bg-[#091530] relative overflow-hidden">
+        
+        <!-- CARD 0: Accounting vs Financial Management (Dichotomy) -->
+        <section id="card-0" class="absolute inset-0 p-4 flex flex-col justify-between transition-transform duration-500 ease-out transform translate-x-0">
+            <div class="scroller h-[38vh] pr-1 space-y-3">
+                <div class="flex items-center gap-2 text-[#ffc107]">
+                    <span class="text-[9px] font-bold uppercase tracking-wider bg-[#ffc107]/20 px-2 py-0.5 rounded" data-trn="theme-dichotomy">Dichotomy Concept</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white" data-trn="card-0-title">Accounting vs. Financial Management</h2>
+                <p class="text-xs text-gray-300 leading-relaxed" data-trn="card-0-desc">
+                    Accounting is your rearview mirror—meticulously recording historical business data. Finance is your front windshield—focusing on forward strategy, investment decisions, and value creation. Drag each node above to its matching operational vessel.
+                </p>
+                
+                <!-- Expandable Knowledge Panel -->
+                <div class="border border-[#1e3a8a] rounded-lg bg-[#0b1b3d]/60 overflow-hidden">
+                    <button onclick="toggleExpand(0)" class="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-gray-200 bg-[#0b1b3d]">
+                        <span data-trn="theoretical-deepdive">Theoretical Deep Dive</span>
+                        <span id="expand-icon-0" class="text-xs text-[#ffc107]">▼</span>
+                    </button>
+                    <div id="expand-body-0" class="hidden p-3 text-[11px] text-gray-400 space-y-2 border-t border-[#1e3a8a] bg-[#071125]/50">
+                        <p><strong class="text-white" data-trn="t0-h1">The Decision-Making Lens:</strong> <span data-trn="t0-b1">Managers transition from bookkeeping compliance to analyzing opportunity cost and return on investment (ROI). Every corporate activity has an economic footprint.</span></p>
+                        <p><strong class="text-white" data-trn="t0-h2">The Strategic Edge:</strong> <span data-trn="t0-b2">Accounting structures clean historical records for tax auditing, while finance maps resources dynamically to foster exponential value and scaling.</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-[7vh] flex items-center justify-between border-t border-[#1e3a8a] pt-2">
+                <span class="text-[9px] text-gray-400" data-trn="drag-tip">Sort all interactive elements to progress.</span>
+                <button onclick="nextStep()" class="bg-[#ffc107] text-[#0b1b3d] font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md hover:bg-yellow-400 transition-all">
+                    <span data-trn="next-step">Next Step</span> →
+                </button>
+            </div>
+        </section>
+
+        <!-- CARD 1: Master Accounting Equation (Balance Scale) -->
+        <section id="card-1" class="absolute inset-0 p-4 flex flex-col justify-between transition-transform duration-500 ease-out transform translate-x-full">
+            <div class="scroller h-[38vh] pr-1 space-y-3">
+                <div class="flex items-center gap-2 text-[#ffc107]">
+                    <span class="text-[9px] font-bold uppercase tracking-wider bg-[#ffc107]/20 px-2 py-0.5 rounded" data-trn="theme-architecture">System Architecture</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white" data-trn="card-1-title">The Master Accounting Equation</h2>
+                <p class="text-xs text-gray-300 leading-relaxed" data-trn="card-1-desc">
+                    The bedrock of financial reporting is: <strong>Assets = Liabilities + Owner Equity</strong>. Every department resource owned must either be financed by external borrowing (debts) or built up by owner investments. Calibrate sliders to balance the scale.
+                </p>
+
+                <!-- Calibrator Sliders for Step 2 -->
+                <div class="space-y-2.5 bg-[#0b1b3d]/60 p-3 rounded-lg border border-[#1e3a8a]">
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="font-semibold text-[#60a5fa]"><span data-trn="eq-assets">Assets (A)</span>: <span id="assets-val" class="font-bold">LKR 100K</span></span>
+                        <span class="font-semibold text-gray-300"><span data-trn="eq-le">Liabilities + Equity (L+E)</span>: <span id="le-val" class="font-bold">LKR 40K</span></span>
+                    </div>
+                    
+                    <div class="space-y-2 text-[10px]">
+                        <div>
+                            <div class="flex justify-between mb-0.5 text-gray-400">
+                                <span data-trn="adj-liabilities">Adjust Liabilities (Bank Loans, Debts)</span>
+                                <span id="val-liab" class="font-bold text-[#f87171]">20K</span>
+                            </div>
+                            <input id="slider-liabilities" type="range" min="10" max="90" value="20" oninput="onCalibrateSlider()" class="w-full accent-[#f87171] h-1 bg-[#1e3a8a] rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-0.5 text-gray-400">
+                                <span data-trn="adj-equity">Adjust Owner Equity (Shares, Retained Profit)</span>
+                                <span id="val-eq" class="font-bold text-[#34d399]">20K</span>
+                            </div>
+                            <input id="slider-equity" type="range" min="10" max="90" value="20" oninput="onCalibrateSlider()" class="w-full accent-[#34d399] h-1 bg-[#1e3a8a] rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expandable Knowledge Panel -->
+                <div class="border border-[#1e3a8a] rounded-lg bg-[#0b1b3d]/60 overflow-hidden">
+                    <button onclick="toggleExpand(1)" class="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-gray-200 bg-[#0b1b3d]">
+                        <span data-trn="theoretical-deepdive">Theoretical Deep Dive</span>
+                        <span id="expand-icon-1" class="text-xs text-[#ffc107]">▼</span>
+                    </button>
+                    <div id="expand-body-1" class="hidden p-3 text-[11px] text-gray-400 space-y-2 border-t border-[#1e3a8a] bg-[#071125]/50">
+                        <p><strong class="text-white" data-trn="t1-h1">Double-Entry Integrity:</strong> <span data-trn="t1-b1">No resource is acquired without a matching source. Buying inventory or property either increases a liability or consumes capital, balancing the scales.</span></p>
+                        <p><strong class="text-white" data-trn="t1-h2">The Equation Logic:</strong> <code class="text-[#ffc107]">Assets = Liabilities + Owner Interest (Equity)</code>. <span data-trn="t1-b2">This fundamental equation structures double-entry balance sheets to ensure perfect compliance auditing.</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-[7vh] flex items-center justify-between border-t border-[#1e3a8a] pt-2">
+                <span class="text-[9px] text-gray-400" data-trn="calibrate-tip">Match Liabilities and Equity to Assets.</span>
+                <button onclick="nextStep()" class="bg-[#ffc107] text-[#0b1b3d] font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md hover:bg-yellow-400 transition-all">
+                    <span data-trn="next-step">Next Step</span> →
+                </button>
+            </div>
+        </section>
+
+        <!-- CARD 2: Zenith Edu-Tech Liquidity Crisis (Systemic Balance Act) -->
+        <section id="card-2" class="absolute inset-0 p-4 flex flex-col justify-between transition-transform duration-500 ease-out transform translate-x-full">
+            <div class="scroller h-[38vh] pr-1 space-y-3">
+                <div class="flex items-center gap-2 text-[#ffc107]">
+                    <span class="text-[9px] font-bold uppercase tracking-wider bg-[#ffc107]/20 px-2 py-0.5 rounded" data-trn="theme-optimization">Case Optimization</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white" data-trn="card-2-title">Zenith Edu-Tech Liquidity Crisis</h2>
+                <p class="text-xs text-gray-300 leading-relaxed" data-trn="card-2-desc">
+                    Zenith Edu-Tech booked LKR 5M in revenue on credit, but is facing immediate insolvency. Trainers and rent demand physical cash today. Modify parameters below to optimize cash collection and achieve growth equilibrium.
+                </p>
+
+                <!-- Case Study Custom Calibrator Sliders -->
+                <div class="space-y-2 bg-[#0b1b3d]/60 p-3 rounded-lg border border-[#1e3a8a] text-[10px]">
+                    <div>
+                        <div class="flex justify-between font-semibold mb-0.5">
+                            <span class="text-gray-300" data-trn="param-terms">Installment Payment Terms</span>
+                            <span id="terms-val-label" class="text-[#ffc107]">90-Day Credit</span>
+                        </div>
+                        <input id="slider-terms" type="range" min="0" max="2" value="0" oninput="onOptimizationSlider()" class="w-full accent-[#ffc107] h-1 bg-[#1e3a8a] rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between font-semibold mb-0.5">
+                            <span class="text-gray-300" data-trn="param-leases">Campus Leases (Fixed vs. Shared)</span>
+                            <span id="leases-val-label" class="text-[#60a5fa]">Long-Term Fixed</span>
+                        </div>
+                        <input id="slider-leases" type="range" min="0" max="2" value="0" oninput="onOptimizationSlider()" class="w-full accent-[#60a5fa] h-1 bg-[#1e3a8a] rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between font-semibold mb-0.5">
+                            <span class="text-gray-300" data-trn="param-capex">Capital Expenditures (CapEx)</span>
+                            <span id="capex-val-label" class="text-[#f87171]">Aggressive Spends</span>
+                        </div>
+                        <input id="slider-capex" type="range" min="0" max="2" value="0" oninput="onOptimizationSlider()" class="w-full accent-[#f87171] h-1 bg-[#1e3a8a] rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Expandable Knowledge Panel -->
+                <div class="border border-[#1e3a8a] rounded-lg bg-[#0b1b3d]/60 overflow-hidden">
+                    <button onclick="toggleExpand(2)" class="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-gray-200 bg-[#0b1b3d]">
+                        <span data-trn="theoretical-deepdive">Theoretical Deep Dive</span>
+                        <span id="expand-icon-2" class="text-xs text-[#ffc107]">▼</span>
+                    </button>
+                    <div id="expand-body-2" class="hidden p-3 text-[11px] text-gray-400 space-y-2 border-t border-[#1e3a8a] bg-[#071125]/50">
+                        <p><strong class="text-white" data-trn="t2-h1">The Profit vs. Cash Trap:</strong> <span data-trn="t2-b1">Accrual accounting logs revenue upon contract signing. However, net profit on paper doesn't cover immediate payroll. Real-world cash flow statements prevent total bankruptcy.</span></p>
+                        <p><strong class="text-white" data-trn="t2-h2">Operational Leverage Optimization:</strong> <span data-trn="t2-b2">Heavy fixed leases elevate operational risk. Moving toward shared structures (variable models) and incentivizing immediate upfront collections preserves vital reserves.</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-[7vh] flex items-center justify-between border-t border-[#1e3a8a] pt-2">
+                <span class="text-[9px] text-gray-400" data-trn="optimize-tip">Tune parameters into safe zones (Liquidity &gt;= 55%, Growth &gt;= 45%).</span>
+                <button onclick="nextStep()" class="bg-[#ffc107] text-[#0b1b3d] font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md hover:bg-yellow-400 transition-all">
+                    <span data-trn="next-step">Next Step</span> →
+                </button>
+            </div>
+        </section>
+
+        <!-- CARD 3: Budgeting & Variance Pivot Simulation (Interactive Flow Board) -->
+        <section id="card-3" class="absolute inset-0 p-4 flex flex-col justify-between transition-transform duration-500 ease-out transform translate-x-full">
+            <div class="scroller h-[38vh] pr-1 space-y-3">
+                <div class="flex items-center gap-2 text-[#ffc107]">
+                    <span class="text-[9px] font-bold uppercase tracking-wider bg-[#ffc107]/20 px-2 py-0.5 rounded" data-trn="theme-pipeline">Variance Control & Pivot</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white" data-trn="card-3-title">Budgeting & Variance Control Loop</h2>
+                <p class="text-xs text-gray-300 leading-relaxed" data-trn="card-3-desc">
+                    Your corporate budget of LKR 450K is ready to be executed. To achieve zero variance, you must strategically route falling resource packets (LKR 50K each) using the interactive diverter gates on the canvas. Route exactly 200K to Marketing, 150K to Operations, and 100K to Rent! One wrong deflection results in an unfavorable variance.
+                </p>
+
+                <!-- Real-time Status and Pipeline Interactive Trigger Block -->
+                <div class="bg-[#0b1b3d]/60 p-3 rounded-lg border border-[#1e3a8a] text-center space-y-3">
+                    <div class="flex justify-around items-center text-[11px] text-gray-300">
+                        <div>
+                            <span class="block text-[9px] uppercase tracking-wider text-gray-400" data-trn="lbl-status">Status</span>
+                            <span id="cycle-status" class="font-bold text-[#ffc107]">Idle / නිශ්ක්‍රීයයි</span>
+                        </div>
+                        <div class="border-l border-gray-700 h-6"></div>
+                        <div>
+                            <span class="block text-[9px] uppercase tracking-wider text-gray-400" data-trn="lbl-packets">Packets Remaining</span>
+                            <span id="cycle-packets" class="font-bold text-white">9 / 9</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button id="btn-start-cycle" onclick="startFiscalCycle()" class="flex-1 bg-[#ffc107] hover:bg-yellow-400 text-[#0b1b3d] font-extrabold text-xs py-2 rounded-lg shadow-md transition-all">
+                            <span data-trn="start-fiscal">Start Fiscal Cycle</span>
+                        </button>
+                        <button id="btn-stop-cycle" onclick="stopFiscalCycle()" class="bg-red-500 hover:bg-red-600 text-white font-bold text-xs px-3 py-2 rounded-lg shadow-md transition-all">
+                            <span data-trn="reset-fiscal">Reset</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Expandable Knowledge Panel -->
+                <div class="border border-[#1e3a8a] rounded-lg bg-[#0b1b3d]/60 overflow-hidden">
+                    <button onclick="toggleExpand(3)" class="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-gray-200 bg-[#0b1b3d]">
+                        <span data-trn="theoretical-deepdive">Theoretical Deep Dive</span>
+                        <span id="expand-icon-3" class="text-xs text-[#ffc107]">▼</span>
+                    </button>
+                    <div id="expand-body-3" class="hidden p-3 text-[11px] text-gray-400 space-y-2 border-t border-[#1e3a8a] bg-[#071125]/50">
+                        <p><strong class="text-white" data-trn="t3-h1">Variance Control Formula:</strong> <code class="text-[#ffc107]">Variance = Actual Spent - Budgeted Cost</code>. <span data-trn="t3-b1">Evaluating variances gives managers actionable insights to pivot resource allocations mid-cycle rather than blindly cutting budgets.</span></p>
+                        <p><strong class="text-white" data-trn="t3-h2">Stewardship Cycle:</strong> <span data-trn="t3-b2">Continuous refinement loops build stakeholder trust by showcasing data-backed justifications for operational spending trends and strategic expansions.</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-[7vh] flex items-center justify-between border-t border-[#1e3a8a] pt-2">
+                <span class="text-[9px] text-gray-400" data-trn="variance-tip">Route 4 packets (200K) to Marketing, 3 (150K) to Operations, and 2 (100K) to Rent!</span>
+                <button id="claim-badge-btn" onclick="openCertificationModal()" class="bg-gray-600 cursor-not-allowed text-gray-400 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md transition-all">
+                    ★ <span data-trn="get-badge">Claim Badge</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 5. Sticky Intellectual Property Footer (6vh) -->
+    <footer class="h-[6vh] bg-[#050c1b] border-t border-[#1e3a8a] px-3 flex items-center justify-center text-center text-[9px] text-gray-400 tracking-tight z-50">
+        <div>
+            OBISL Campus | Concept by Michael Ranuka Gamage | 
+            <span class="text-[#ffc107] font-semibold">CBMS / CHRM / CMS Certification Tracks</span>
+        </div>
+    </footer>
+
+</div>
+
+<!-- Incomplete Assessment Error Dialog Box -->
+<div id="lock-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300">
+    <div class="bg-gradient-to-br from-[#1e1e38] to-[#0d0d1f] border-2 border-red-500 rounded-2xl w-full max-w-sm p-5 relative flex flex-col items-center text-center shadow-2xl">
+        <button onclick="closeLockModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white font-bold text-lg">✕</button>
+        <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 text-xl font-bold mb-3">!</div>
+        <h3 class="text-md font-bold text-white uppercase tracking-wider mb-1" data-trn="lock-title">Assessment Incomplete</h3>
+        <p class="text-xs text-gray-300 mb-4" data-trn="lock-desc">You must complete all activities before claiming your badge.</p>
+        <div class="w-full bg-[#071125] border border-red-500/20 rounded-xl p-3 text-left text-[11px] text-gray-400 space-y-1.5 mb-2" id="lock-report-list">
+            <!-- Dynamically populated via js checks -->
+        </div>
+        <button onclick="closeLockModal()" class="mt-2 w-full bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2 rounded-lg transition-colors" data-trn="btn-close">Close</button>
+    </div>
+</div>
+
+<!-- 6. Full-screen Professional Badge Reward Modal -->
+<div id="cert-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300">
+    <div class="bg-gradient-to-br from-[#0c1e42] to-[#061026] border-2 border-yellow-400 rounded-2xl w-full max-w-lg p-6 relative flex flex-col items-center text-center shadow-2xl">
+        
+        <!-- Glow Backplate -->
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-400/15 via-transparent to-transparent opacity-60 rounded-2xl pointer-events-none"></div>
+        
+        <!-- Modal Exit Button -->
+        <button onclick="closeCertificationModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white font-bold text-lg transition-colors">✕</button>
+
+        <!-- Premium SVG Interactive Crest Badge -->
+        <div class="relative w-24 h-24 mb-3 flex items-center justify-center">
+            <div class="absolute inset-0 bg-[#ffc107] rounded-full animate-ping opacity-20"></div>
+            <svg class="w-20 h-20 relative z-10 filter drop-shadow-[0_4px_12px_rgba(255,193,7,0.5)]" viewBox="0 0 100 100">
+                <polygon points="50,5 90,25 90,75 50,95 10,75 10,25" fill="#0b1b3d" stroke="#ffc107" stroke-width="4"/>
+                <path d="M 30,50 Q 50,22 70,50 Q 50,78 30,50" fill="none" stroke="#ffc107" stroke-width="2"/>
+                <circle cx="50" cy="50" r="10" fill="#ffc107"/>
+                <text x="50" y="85" text-anchor="middle" fill="#ffffff" font-size="8" font-family="monospace" font-weight="bold">OBISL</text>
+            </svg>
+        </div>
+
+        <h3 class="text-lg font-bold text-white uppercase tracking-wider mb-1" data-trn="cert-congrats">CONGRATULATIONS!</h3>
+        <p class="text-xs text-gray-300 max-w-xs mb-3.5 leading-relaxed" data-trn="cert-body">
+            You have successfully completed the interactive learning track and earned your premium achievement badge.
+        </p>
+
+        <!-- Course Module Specifics -->
+        <div class="bg-[#071125] border border-yellow-400/30 rounded-xl px-4 py-3 w-full mb-4">
+            <h4 class="text-[10px] font-bold text-yellow-400 tracking-wider uppercase" data-trn="cert-program">CORE MODULE 2</h4>
+            <h5 class="text-sm font-extrabold text-white my-0.5" data-trn="cert-module">Financial Literacy for Managers</h5>
+            <div class="text-[8px] text-gray-400 flex justify-center gap-2 mt-1">
+                <span>CBMS</span> | <span>CHRM</span> | <span>CMS</span>
+            </div>
+        </div>
+
+        <!-- Academic Authentication signatures -->
+        <div class="w-full border-t border-gray-700/60 pt-3 flex justify-between items-center px-2">
+            <div class="text-left">
+                <div class="font-mono text-[8px] text-[#ffc107]">ISSUED BY</div>
+                <div class="font-bold text-[11px] text-white">OBISL Campus</div>
+            </div>
+            <div class="text-right">
+                <!-- Signature graphics styling -->
+                <div class="italic font-serif text-xs text-yellow-300 font-semibold tracking-wider">Michael R. Gamage</div>
+                <div class="text-[8px] text-gray-400" data-trn="cert-director">Author / Lecturer, OBISL Campus</div>
+            </div>
+        </div>
+
+        <!-- Operational Buttons -->
+        <div class="mt-4.5 w-full flex gap-2">
+            <button onclick="shareCert()" class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-[#0b1b3d] font-extrabold text-xs py-2 rounded-lg transition-colors" data-trn="cert-share">
+                COPY ASSESSMENT TOKEN
+            </button>
+            <button onclick="window.print()" class="bg-[#1e3a8a] text-white font-semibold text-xs px-4 py-2 rounded-lg hover:bg-[#2563eb] transition-colors" data-trn="cert-print">
+                PRINT
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global state tracking variable declaration
+let currentStep = 0;
+let language = 'en';
+
+// Global validation monitoring array tracking all activities completion statuses
+let stepsCompleted = [false, false, false, false];
+
+// Viewport layout parameters dynamically scaled on resize event handlers
+let scaleMultiplier = 1;
+let relativeWidth = 400;
+let relativeHeight = 200;
+
+// High precision vector graphics rendering canvas loop 
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+let animFrameId = null;
+
+// Tracking drag coordinates with coordinate adjustment offsets
+const inputState = {
+    x: 0,
+    y: 0,
+    offsetX: 0,
+    offsetY: 0,
+    isDown: false,
+    draggedItem: null,
+    draggedType: null
+};
+
+// Step 1: Sorting Engine Canvas data model
+const step1State = {
+    bins: [
+        { id: 'acc', labelEn: 'Accounting (Historical)', labelSi: 'ගිණුම්කරණය (ඓතිහාසික)', x: 0, y: 0, w: 0, h: 0, color: '#3b82f6' },
+        { id: 'fin', labelEn: 'Finance (Strategic)', labelSi: 'මූල්‍ය (උපායමාර්ගික)', x: 0, y: 0, w: 0, h: 0, color: '#f59e0b' }
+    ],
+    items: [
+        { id: 1, textEn: 'Rearview Mirror', textSi: 'පසුපස දර්පණය', bin: 'acc', x: 0, y: 0, r: 0, color: '#3b82f6', locked: false },
+        { id: 2, textEn: 'Windshield View', textSi: 'ඉදිරිපස වීදුරුව', bin: 'fin', x: 0, y: 0, r: 0, color: '#f59e0b', locked: false },
+        { id: 3, textEn: 'Tax Auditing', textSi: 'බදු විගණන කටයුතු', bin: 'acc', x: 0, y: 0, r: 0, color: '#3b82f6', locked: false },
+        { id: 4, textEn: 'Value Creation', textSi: 'අගය නිර්මාණය කිරීම', bin: 'fin', x: 0, y: 0, r: 0, color: '#f59e0b', locked: false },
+        { id: 5, textEn: 'Bookkeeping', textSi: 'පොත් තැබීම', bin: 'acc', x: 0, y: 0, r: 0, color: '#3b82f6', locked: false },
+        { id: 6, textEn: 'Opportunity Cost', textSi: 'ආවස්ථික පිරිවැය', bin: 'fin', x: 0, y: 0, r: 0, color: '#10b981', locked: false }
+    ],
+    completed: false
+};
+
+// Step 2: Accounting balance scale equation tracking
+const step2State = {
+    balanceAngle: 0,
+    targetAngle: 0,
+    assets: 100,
+    liabilities: 20,
+    equity: 20,
+    completed: false
+};
+
+// Step 3: Crisis optimization parameters
+const step3State = {
+    terms: 0, 
+    leases: 0, 
+    capex: 0, 
+    liquidity: 15,
+    growth: 90,
+    completed: false
+};
+
+// Overhauled Step 4: High-fidelity Flow Engine for Budget Variance Allocation Game
+const step4State = {
+    active: false,
+    packets: [], // Array containing actively falling orbs: {x, y, t, stage, path, finalBin, speed}
+    gates: [
+        { id: 'gate0', direction: 'L', labelEn: 'Strategic Shift', labelSi: 'උපායමාර්ගික හැරවුම' },
+        { id: 'gate1', direction: 'L', labelEn: 'Marketing / Ops Pivot', labelSi: 'අලෙවිකරණ / මෙහෙයුම්' },
+        { id: 'gate2', direction: 'L', labelEn: 'Ops / Rent Restructure', labelSi: 'මෙහෙයුම් / කුලී' }
+    ],
+    bins: [
+        { id: 'mkt', labelEn: 'Marketing', labelSi: 'අලෙවිකරණය', target: 200, current: 0, color: '#f87171' },
+        { id: 'ops', labelEn: 'Operations', labelSi: 'මෙහෙයුම්', target: 150, current: 0, color: '#34d399' },
+        { id: 'rent', labelEn: 'Rent', labelSi: 'කුලිය', target: 100, current: 0, color: '#60a5fa' }
+    ],
+    packetsLeft: 9,
+    spawnTimer: 0,
+    completed: false
+};
+
+// Full bilingual translation dictionary mapping English and Sinhala accurately
+const trnDict = {
+    en: {
+        'tab-1': 'Record vs Strategy',
+        'tab-2': 'Equation',
+        'tab-3': 'Liquidity Act',
+        'tab-4': 'Budget Pivot',
+        'canvas-instruction-drag': 'Drag items to their correct operational bays',
+        'canvas-instruction-scale': 'Calibrate sliders to align Liabilities + Equity scale to Assets (100K)',
+        'canvas-instruction-crisis': 'Optimize payment, lease & capex metrics to avoid cash collapse',
+        'canvas-instruction-variance': 'Route corporate budget packets to meet targets and achieve zero variance!',
+        'task-completed': 'TASK COMPLETED SUCCESSFULLY!',
+        'theme-dichotomy': 'Dichotomy Concept',
+        'card-0-title': 'Accounting vs. Financial Management',
+        'card-0-desc': 'Accounting is your rearview mirror—meticulously recording historical business data. Finance is your front windshield—focusing on forward strategy, investment decisions, and value creation. Drag each node above to its matching operational vessel.',
+        'theoretical-deepdive': 'Theoretical Deep Dive',
+        'drag-tip': 'Sort all interactive elements to progress.',
+        'next-step': 'Next Step',
+        'theme-architecture': 'System Architecture',
+        'card-1-title': 'The Master Accounting Equation',
+        'card-1-desc': 'The bedrock of financial reporting is: Assets = Liabilities + Owner Equity. Every department resource owned must either be financed by external borrowing (debts) or built up by owner investments. Calibrate sliders to balance the scale.',
+        'eq-assets': 'Assets (A)',
+        'eq-le': 'Liabilities + Equity (L+E)',
+        'adj-liabilities': 'Adjust Liabilities (Bank Loans, Debts)',
+        'adj-equity': 'Adjust Owner Equity (Shares, Retained Profit)',
+        'calibrate-tip': 'Match Liabilities and Equity to Assets.',
+        'theme-optimization': 'Case Optimization',
+        'card-2-title': 'Zenith Edu-Tech Liquidity Crisis',
+        'card-2-desc': 'Zenith Edu-Tech booked LKR 5M in revenue on credit, but is facing immediate insolvency. Trainers and rent demand physical cash today. Modify parameters below to optimize cash collection and achieve growth equilibrium.',
+        'param-terms': 'Installment Payment Terms',
+        'param-leases': 'Campus Leases (Fixed vs. Shared)',
+        'param-capex': 'Capital Expenditures (CapEx)',
+        'optimize-tip': 'Tune parameters into safe zones (Liquidity >= 55%, Growth >= 45%).',
+        'theme-pipeline': 'Variance Control & Pivot',
+        'card-3-title': 'Budgeting & Variance Control Loop',
+        'card-3-desc': 'Your corporate budget of LKR 450K is ready to be executed. To achieve zero variance, you must strategically route falling resource packets (LKR 50K each) using the interactive diverter gates on the canvas. Route exactly 200K to Marketing, 150K to Operations, and 100K to Rent! One wrong deflection results in an unfavorable variance.',
+        'variance-tip': 'Route 4 packets (200K) to Marketing, 3 (150K) to Operations, and 2 (100K) to Rent!',
+        'get-badge': 'Claim Badge',
+        'cert-congrats': 'CONGRATULATIONS!',
+        'cert-body': 'You have successfully completed the interactive learning track and earned your premium achievement badge.',
+        'cert-program': 'CORE MODULE 2',
+        'cert-module': 'Financial Literacy for Managers',
+        'cert-director': 'Author / Lecturer, OBISL Campus',
+        'cert-share': 'COPY ASSESSMENT TOKEN',
+        'cert-print': 'PRINT',
+        'lock-title': 'Assessment Incomplete',
+        'lock-desc': 'You must complete all activities before claiming your badge.',
+        'lock-s1': 'Module 1: Sort Accounting vs Finance',
+        'lock-s2': 'Module 2: Calibrate Accounting Equation',
+        'lock-s3': 'Module 3: Resolve Liquidity Crisis',
+        'lock-s4': 'Module 4: Resolve Variance & Budget Balance',
+        'btn-close': 'Close',
+        'lbl-status': 'Status',
+        'lbl-packets': 'Packets Remaining',
+        'start-fiscal': 'Start Fiscal Cycle',
+        'reset-fiscal': 'Reset',
+        
+        // Theoretical Deep Dives
+        't0-h1': 'The Decision-Making Lens:',
+        't0-b1': 'Managers transition from bookkeeping compliance to analyzing opportunity cost and return on investment (ROI). Every corporate activity has an economic footprint.',
+        't0-h2': 'The Strategic Edge:',
+        't0-b2': 'Accounting structures clean historical records for tax auditing, while finance maps resources dynamically to foster exponential value and scaling.',
+        't1-h1': 'Double-Entry Integrity:',
+        't1-b1': 'No resource is acquired without a matching source. Buying inventory or property either increases a liability or consumes capital, balancing the scales.',
+        't1-h2': 'The Equation Logic:',
+        't1-b2': 'This fundamental equation structures double-entry balance sheets to ensure perfect compliance auditing.',
+        't2-h1': 'The Profit vs. Cash Trap:',
+        't2-b1': 'Accrual accounting logs revenue upon contract signing. However, net profit on paper doesn\'t cover immediate payroll. Real-world cash flow statements prevent total bankruptcy.',
+        't2-h2': 'Operational Leverage Optimization:',
+        't2-b2': 'Heavy fixed leases elevate operational risk. Moving toward shared structures (variable models) and incentivizing immediate upfront collections preserves vital reserves.',
+        't3-h1': 'Variance Control Formula:',
+        't3-b1': 'Evaluating variances gives managers actionable insights to pivot resource allocations mid-cycle rather than blindly cutting budgets.',
+        't3-h2': 'Stewardship Cycle:',
+        't3-b2': 'Continuous refinement loops build stakeholder trust by showcasing data-backed justifications for operational spending trends and strategic expansions.'
+    },
+    si: {
+        'tab-1': 'වාර්තාව සහ මූල්‍යය',
+        'tab-2': 'ගිණුම්කරණ සමීකරණය',
+        'tab-3': 'ද්‍රවශීලතා අර්බුදය',
+        'tab-4': 'අයවැය හැරවුම',
+        'canvas-instruction-drag': 'ගැලපෙන මෙහෙයුම් බහාලුම් වෙත මූලද්‍රව්‍ය ඇදගෙන යන්න',
+        'canvas-instruction-scale': 'වගකීම් + හිමිකම (Liabilities + Equity) වත්කම් (100K) වලට සමාන වන සේ සකසන්න',
+        'canvas-instruction-crisis': 'ව්‍යාපාරය බංකොලොත් වීම වැළැක්වීමට ගෙවීම්, බදු සහ වියදම් පරාමිතීන් ප්‍රශස්ත කරන්න',
+        'canvas-instruction-variance': 'අයවැය පැකට් නිවැරදිව යොමු කරමින් ශුන්‍ය විචල්‍යතාවයක් ලබා ගන්න!',
+        'task-completed': 'කාර්යය සාර්ථකව සම්පූර්ණ කරන ලදී!',
+        'theme-dichotomy': 'ද්විත්ව සංකල්පය',
+        'card-0-title': 'ගිණුම්කරණය එදිරිව මූල්‍ය කළමනාකරණය',
+        'card-0-desc': 'ගිණුම්කරණය යනු ඔබගේ පසුපස බලන කණ්ණාඩියයි—එය අතීත ව්‍යාපාරික දත්ත සටහන් කරයි. මූල්‍ය කළමනාකරණය යනු ඉදිරිපස වීදුරුවයි—එය අනාගත උපායමාර්ග, ආයෝජන තීරණ සහ වටිනාකම් නිර්මාණය කෙරෙහි අවධානය යොමු කරයි. ගැලපෙන බහාලුම වෙත මූලද්‍රව්‍ය ඇද දමන්න.',
+        'theoretical-deepdive': 'න්‍යායාත්මක ගැඹුරු විග්‍රහය',
+        'drag-tip': 'ඉදිරියට යාමට සියලුම අන්තර්ක්‍රියාකාරී මූලද්‍රව්‍ය වර්ගීකරණය කරන්න.',
+        'next-step': 'මීළඟ පියවර',
+        'theme-architecture': 'පද්ධති ව්‍යුහය',
+        'card-1-title': 'මූලික ගිණුම්කරණ සමීකරණය',
+        'card-1-desc': 'මූල්‍ය වාර්තාකරණයේ පදනම වන්නේ: වත්කම් = වගකීම් + හිමිකම (Assets = Liabilities + Owner Equity) යන්නයි. ආයතනය සතු සෑම වත්කමක්ම ණය මගින් හෝ හිමිකරුවන්ගේ ආයෝජනයෙන් මූල්‍යනය විය යුතුය. සමීකරණය සමතුලිත කරන්න.',
+        'eq-assets': 'වත්කම් (Assets)',
+        'eq-le': 'වගකීම් + හිමිකම (Liabilities + Equity)',
+        'adj-liabilities': 'වගකීම් වෙනස් කරන්න (බැංකු ණය සහ ණයගැති බැඳීම්)',
+        'adj-equity': 'හිමිකම වෙනස් කරන්න (කොටස් සහ රඳවාගත් ලාභ)',
+        'calibrate-tip': 'වත්කම් වලට ගැලපෙන පරිදි වගකීම් සහ හිමිකම සකසන්න.',
+        'theme-optimization': 'සිද්ධි අධ්‍යයන ප්‍රශස්තකරණය',
+        'card-2-title': 'Zenith Edu-Tech ද්‍රවශීලතා අර්බුදය',
+        'card-2-desc': 'Zenith Edu-Tech ආයතනය රු. මිලියන 5ක ආදායමක් වාර්තා කලද, සැබෑ මුදල් නොමැති වීමෙන් බංකොලොත් වීමේ තර්ජනයට මුහුණ පා ඇත. ද්‍රවශීලතාවය යථා තත්ත්වයට පත් කරමින් වර්ධනය සමතුලිත කිරීමට පරාමිතීන් සකසන්න.',
+        'param-terms': 'වාරික ගෙවීමේ නියමයන්',
+        'param-leases': 'කැම්පස් බදු ක්‍රම (ස්ථාවර එදිරිව හවුල්)',
+        'param-capex': 'ප්‍රාග්ධන වියදම් (CapEx)',
+        'optimize-tip': 'පරාමිතීන් ආරක්ෂිත කලාපයට සකසන්න (ද්‍රවශීලතාවය >= 55%, වර්ධනය >= 45%).',
+        'theme-pipeline': 'විචල්‍යතා පාලනය සහ හැරවුම',
+        'card-3-title': 'අයවැයකරණය සහ විචල්‍යතා පාලන චක්‍රය',
+        'card-3-desc': 'ඔබගේ රු. 450K අයවැය ක්‍රියාත්මක කිරීමට සූදානම්ය. ශුන්‍ය විචල්‍යතාවයක් ලබා ගැනීම සඳහා ඔබ කැන්වසය මත ඇති හැරවුම් ගේට්ටු භාවිතයෙන් වැටෙන අරමුදල් පැකට් (එකක් රු. 50K බැගින්) නිවැරදි දෙපාර්තමේන්තුවට යොමු කළ යුතුය. අලෙවිකරණයට 200K, මෙහෙයුම්වලට 150K සහ කුලියට 100K ක් හරියටම යොමු කරන්න!',
+        'variance-tip': 'අලෙවිකරණයට පැකට් 4ක් (200K), මෙහෙයුම් වලට 3ක් (150K), සහ කුලියට 2ක් (100K) යොමු කරන්න!',
+        'get-badge': 'බැජ් එක ලබාගන්න',
+        'cert-congrats': 'සුභ පැතුම්!',
+        'cert-body': 'ඔබ සාර්ථකව මෙම අන්තර්ක්‍රියාකාරී පාඨමාලා ඇගයීම අවසන් කර ඔබගේ වෘත්තීය නිපුණතා බැජ් එක උපයාගෙන ඇත.',
+        'cert-program': 'ප්‍රධාන මොඩියුල 2',
+        'cert-module': 'කළමනාකරුවන් සඳහා මූල්‍ය සාක්ෂරතාවය',
+        'cert-director': 'කර්තෘ / කථිකාචාර්ය, OBISL Campus',
+        'cert-share': 'සත්‍යාපන කේතය පිටපත් කරන්න',
+        'cert-print': 'මුද්‍රණය කරන්න',
+        'lock-title': 'ඇගයීම අසම්පූර්ණයි',
+        'lock-desc': 'ඔබගේ බැජ් එක ලබා ගැනීමට පෙර ඔබ සියලුම අභ්‍යාස සම්පූර්ණ කළ යුතුය.',
+        'lock-s1': 'මොඩියුලය 1: ගිණුම්කරණය සහ මූල්‍ය වර්ගීකරණය',
+        'lock-s2': 'මොඩියුලය 2: ගිණුම්කරණ සමීකරණය සමතුලිත කිරීම',
+        'lock-s3': 'මොඩියුලය 3: ද්‍රවශීලතා අර්බුදය විසඳීම',
+        'lock-s4': 'මොඩියුලය 4: විචල්‍යතා සහ අයවැය හැරවුම විසඳීම',
+        'btn-close': 'වසා දමන්න',
+        'lbl-status': 'තත්ත්වය',
+        'lbl-packets': 'ඉතිරි පැකට්',
+        'start-fiscal': 'මුදල් වර්ෂය අරඹන්න',
+        'reset-fiscal': 'නැවත සකසන්න',
+
+        // Sinhala translations for theoretical deep dives
+        't0-h1': 'තීරණ ගැනීමේ දෘෂ්ටිකෝණය:',
+        't0-b1': 'කළමනාකරුවන් සරල පොත් තැබීමේ සීමාවෙන් ඔබ්බට ගොස් ආවස්ථික පිරිවැය සහ ආයෝජන ප්‍රතිලාභ (ROI) විශ්ලේෂණය කිරීමට පුරුදු විය යුතුය. සෑම ව්‍යාපාරික මෙහෙයුමකම ආර්ථික බලපෑමක් ඇත.',
+        't0-h2': 'උපායමාර්ගික වාසිය:',
+        't0-b2': 'ගිණුම්කරණය මගින් විගණන කටයුතු සඳහා නිවැරදි අතීත වාර්තා සපයන අතර, මූල්‍ය කළමනාකරණය මගින් අනාගත අගය නිර්මාණය සඳහා සම්පත් කාර්යක්ෂමව මෙහෙයවයි.',
+        't1-h1': 'ද්විත්ව සටහන් වල නිරවද්‍යතාවය:',
+        't1-b1': 'ගැලපෙන ප්‍රභවයකින් තොරව කිසිදු සම්පතක් අත්පත් කරගත නොහැක. තොග හෝ දේපල මිලදී ගැනීමේදී එක්කෝ වගකීමක් වැඩි වේ, නැතහොත් ප්‍රාග්ධනය වැය වී සමීකරණය සමතුලිතව පවතී.',
+        't1-h2': 'සමීකරණ තාර්කිකත්වය:',
+        't1-b2': 'මෙම මූලික සමීකරණය මගින් ව්‍යාපාරයේ ද්විත්ව සටහන් පදනම සහ ශේෂ පත්‍රයේ විශ්වාසනීයත්වය සහතික කරනු ලබයි.',
+        't2-h1': 'ලාභය එදිරිව මුදල් උගුල:',
+        't2-b1': 'උපචිත පදනම මත කොන්ත්‍රාත්තුව අත්සන් කල සැනින් ආදායම වාර්තා කලද, සැබෑ මුදල් ලැබෙන තෙක් සේවක වැටුප් ගෙවිය නොහැක. මුදල් ප්‍රවාහ වාර්තාකරණය මගින් ආයතනය බංකොලොත් වීම වළක්වයි.',
+        't2-h2': 'මෙහෙයුම් උත්තෝලනය ප්‍රශස්තකරණය:',
+        't2-b2': 'අධික ස්ථාවර බදු පිරිවැය මගින් මෙහෙයුම් අවදානම වැඩි කරයි. හවුල්/නම්‍යශීලී අවකාශ භාවිතය (විචල්‍ය පිරිවැය) සහ කල්තියා මුදල් එකතු කිරීම මගින් ද්‍රවශීලතාවය සුරැකේ.',
+        't3-h1': 'විචල්‍යතා පාලන සූත්‍රය:',
+        't3-b1': 'විචලනය = සැබෑ පිරිවැය - අයවැයගත පිරිවැය. විචල්‍යතාවන් පාලනය මගින් කළමනාකරුවන්ට අන්ධ ලෙස අයවැය කපා හැරීම වෙනුවට මැද-චක්‍රයේදී සම්පත් නැවත වෙන් කිරීමට අවස්ථාව ලැබේ.',
+        't3-h2': 'භාරකාරත්ව චක්‍රය:',
+        't3-b2': 'අඛණ්ඩව ක්‍රියාත්මක වන මෙම පාලන වටය මගින් පාර්ශවකරුවන් අතර ව්‍යාපාරික පිරිවැය කළමනාකරණය පිළිබඳ දැඩි විශ්වාසයක් සහ විනිවිදභාවයක් ගොඩනංවයි.'
+    }
+};
+
+// Audio Synthesizer Controls
+let audioCtx;
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+function playTone(freq, type, duration) {
+    try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {
+        console.warn("Audio Context block overridden.");
+    }
+}
+
+function playSuccessSfx() {
+    playTone(523.25, 'triangle', 0.1); 
+    setTimeout(() => playTone(659.25, 'triangle', 0.1), 80); 
+    setTimeout(() => playTone(783.99, 'triangle', 0.12), 160); 
+    setTimeout(() => playTone(1046.50, 'triangle', 0.25), 240); 
+}
+
+function playClickSfx() {
+    playTone(380, 'sine', 0.05);
+}
+
+function setLanguage(l) {
+    language = l;
+    initAudio();
+    playClickSfx();
+    
+    const enBtn = document.getElementById('lang-btn-en');
+    const siBtn = document.getElementById('lang-btn-si');
+    if (l === 'en') {
+        enBtn.className = "px-2 py-0.5 rounded-full text-[10px] font-bold transition-all bg-[#ffc107] text-[#0b1b3d]";
+        siBtn.className = "px-2 py-0.5 rounded-full text-[10px] font-bold transition-all text-gray-400";
+    } else {
+        siBtn.className = "px-2 py-0.5 rounded-full text-[10px] font-bold transition-all bg-[#ffc107] text-[#0b1b3d]";
+        enBtn.className = "px-2 py-0.5 rounded-full text-[10px] font-bold transition-all text-gray-400";
+    }
+
+    document.querySelectorAll('[data-trn]').forEach(el => {
+        const key = el.getAttribute('data-trn');
+        if (trnDict[l][key]) {
+            el.innerHTML = trnDict[l][key];
+        }
+    });
+
+    updateInstructionsHint();
+    onOptimizationSlider();
+    updateCycleControlsUI();
+    updateNavigationUI();
+}
+
+function updateInstructionsHint() {
+    const hintElement = document.getElementById('hint-desc');
+    if (!hintElement) return;
+    
+    if (currentStep === 0) {
+        hintElement.setAttribute('data-trn', 'canvas-instruction-drag');
+    } else if (currentStep === 1) {
+        hintElement.setAttribute('data-trn', 'canvas-instruction-scale');
+    } else if (currentStep === 2) {
+        hintElement.setAttribute('data-trn', 'canvas-instruction-crisis');
+    } else if (currentStep === 3) {
+        hintElement.setAttribute('data-trn', 'canvas-instruction-variance');
+    }
+    
+    const key = hintElement.getAttribute('data-trn');
+    if (trnDict[language][key]) {
+        hintElement.innerHTML = trnDict[language][key];
+    }
+}
+
+function setupCanvasDimensions() {
+    const parent = canvas.parentElement;
+    canvas.width = parent.clientWidth * window.devicePixelRatio;
+    canvas.height = parent.clientHeight * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    relativeWidth = parent.clientWidth;
+    relativeHeight = parent.clientHeight;
+    scaleMultiplier = Math.min(relativeWidth / 480, relativeHeight / 240);
+    
+    initStepDimensions();
+}
+
+function initStepDimensions() {
+    const midX = relativeWidth / 2;
+    const midY = relativeHeight / 2;
+    
+    // Step 1: Dichotomy Vessels setup
+    step1State.bins[0].x = 25 * scaleMultiplier;
+    step1State.bins[0].y = 40 * scaleMultiplier;
+    step1State.bins[0].w = 145 * scaleMultiplier;
+    step1State.bins[0].h = relativeHeight - 80 * scaleMultiplier;
+
+    step1State.bins[1].x = relativeWidth - 170 * scaleMultiplier;
+    step1State.bins[1].y = 40 * scaleMultiplier;
+    step1State.bins[1].w = 145 * scaleMultiplier;
+    step1State.bins[1].h = relativeHeight - 80 * scaleMultiplier;
+
+    step1State.items.forEach((item, index) => {
+        if (!item.locked) {
+            item.x = midX + (index % 2 === 0 ? -1 : 1) * (20 + (index * 6)) * scaleMultiplier;
+            item.y = midY + (index - 2.5) * 26 * scaleMultiplier;
+            item.r = 13 * scaleMultiplier;
+        }
+    });
+
+    // Step 4 Overhaul Dimensions Setup
+    const gate0Y = 60 * scaleMultiplier;
+    const gate12Y = 115 * scaleMultiplier;
+    
+    // Position elements matching interactive matrix
+    step4State.gates[0].x = midX;
+    step4State.gates[0].y = gate0Y;
+    step4State.gates[0].w = 54 * scaleMultiplier;
+    step4State.gates[0].h = 8 * scaleMultiplier;
+
+    step4State.gates[1].x = midX - 85 * scaleMultiplier;
+    step4State.gates[1].y = gate12Y;
+    step4State.gates[1].w = 46 * scaleMultiplier;
+    step4State.gates[1].h = 8 * scaleMultiplier;
+
+    step4State.gates[2].x = midX + 85 * scaleMultiplier;
+    step4State.gates[2].y = gate12Y;
+    step4State.gates[2].w = 46 * scaleMultiplier;
+    step4State.gates[2].h = 8 * scaleMultiplier;
+
+    const binW = 86 * scaleMultiplier;
+    const binH = 34 * scaleMultiplier;
+    const binY = relativeHeight - 52 * scaleMultiplier;
+
+    step4State.bins[0].x = midX - 125 * scaleMultiplier - binW/2;
+    step4State.bins[0].y = binY;
+    step4State.bins[0].w = binW;
+    step4State.bins[0].h = binH;
+
+    step4State.bins[1].x = midX - binW/2;
+    step4State.bins[1].y = binY;
+    step4State.bins[1].w = binW;
+    step4State.bins[1].h = binH;
+
+    step4State.bins[2].x = midX + 125 * scaleMultiplier - binW/2;
+    step4State.bins[2].y = binY;
+    step4State.bins[2].w = binW;
+    step4State.bins[2].h = binH;
+}
+
+window.addEventListener('resize', setupCanvasDimensions);
+
+// Coordinate calculations supporting mobile screen bounds
+function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+    return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+    };
+}
+
+function onInputDown(e) {
+    initAudio();
+    if (e.cancelable) e.preventDefault();
+    
+    const coords = getCanvasCoords(e);
+    inputState.x = coords.x;
+    inputState.y = coords.y;
+    inputState.isDown = true;
+
+    if (currentStep === 0) {
+        for (let i = 0; i < step1State.items.length; i++) {
+            const item = step1State.items[i];
+            if (item.locked) continue;
+            const dist = Math.hypot(coords.x - item.x, coords.y - item.y);
+            if (dist < item.r * 1.5) {
+                inputState.draggedItem = item;
+                inputState.draggedType = 'step1';
+                inputState.offsetX = coords.x - item.x;
+                inputState.offsetY = coords.y - item.y;
+                break;
+            }
+        }
+    } else if (currentStep === 3) {
+        // Handle physical toggle clicks near Step 4 diverter gates
+        for (let i = 0; i < step4State.gates.length; i++) {
+            const g = step4State.gates[i];
+            const dist = Math.hypot(coords.x - g.x, coords.y - g.y);
+            if (dist < 32 * scaleMultiplier) {
+                g.direction = g.direction === 'L' ? 'R' : 'L';
+                playTone(420, 'sine', 0.05);
+                break;
+            }
+        }
+    }
+}
+
+function onInputMove(e) {
+    if (!inputState.isDown) return;
+    if (e.cancelable) e.preventDefault();
+    
+    const coords = getCanvasCoords(e);
+
+    if (inputState.draggedItem) {
+        inputState.draggedItem.x = coords.x - inputState.offsetX;
+        inputState.draggedItem.y = coords.y - inputState.offsetY;
+    }
+
+    inputState.x = coords.x;
+    inputState.y = coords.y;
+}
+
+function onInputUp(e) {
+    if (e.cancelable) e.preventDefault();
+    inputState.isDown = false;
+
+    if (currentStep === 0 && inputState.draggedItem && inputState.draggedType === 'step1') {
+        const item = inputState.draggedItem;
+        let droppedCorrectly = false;
+        
+        step1State.bins.forEach(bin => {
+            if (item.bin === bin.id) {
+                if (item.x >= bin.x && item.x <= bin.x + bin.w &&
+                    item.y >= bin.y && item.y <= bin.y + bin.h) {
+                    
+                    item.locked = true;
+                    item.x = bin.x + bin.w / 2;
+                    item.y = bin.y + 40 * scaleMultiplier + (step1State.items.filter(it => it.locked && it.bin === bin.id).length * 18 * scaleMultiplier);
+                    droppedCorrectly = true;
+                    playTone(620, 'sine', 0.1);
+                }
+            }
+        });
+
+        if (!droppedCorrectly) {
+            initStepDimensions();
+            playTone(200, 'sine', 0.12);
+        }
+        checkStep1Completion();
+    } 
+
+    inputState.draggedItem = null;
+    inputState.draggedType = null;
+}
+
+function checkStep1Completion() {
+    const allLocked = step1State.items.every(it => it.locked);
+    if (allLocked && !step1State.completed) {
+        step1State.completed = true;
+        stepsCompleted[0] = true;
+        updateNavigationUI();
+        triggerSuccessLoop();
+    }
+}
+
+function onCalibrateSlider() {
+    const lVal = parseInt(document.getElementById('slider-liabilities').value);
+    const eVal = parseInt(document.getElementById('slider-equity').value);
+    
+    step2State.liabilities = lVal;
+    step2State.equity = eVal;
+
+    document.getElementById('val-liab').innerText = `${lVal}K`;
+    document.getElementById('val-eq').innerText = `${eVal}K`;
+
+    document.getElementById('assets-val').innerText = `LKR 100K`;
+    document.getElementById('le-val').innerText = `LKR ${lVal + eVal}K`;
+
+    const diff = 100 - (lVal + eVal);
+    step2State.targetAngle = (diff * 0.007); 
+
+    if (Math.abs(diff) === 0 && !step2State.completed) {
+        step2State.completed = true;
+        stepsCompleted[1] = true;
+        updateNavigationUI();
+        triggerSuccessLoop();
+    }
+}
+
+function onOptimizationSlider() {
+    const tVal = parseInt(document.getElementById('slider-terms').value);
+    const lVal = parseInt(document.getElementById('slider-leases').value);
+    const cVal = parseInt(document.getElementById('slider-capex').value);
+
+    step3State.terms = tVal;
+    step3State.leases = lVal;
+    step3State.capex = cVal;
+
+    step3State.liquidity = 15 + (tVal * 25) + (lVal * 20) + (cVal * 20);
+    step3State.growth = 90 - (tVal * 15) - (lVal * 10) - (cVal * 15);
+
+    const labelTerms = language === 'en' ? ['90-Day Credit', '45-Day Term', 'Upfront Cash'][tVal] : ['දින 90 ණය', 'දින 45 වාරික', 'කල්තියා ගෙවීම්'][tVal];
+    const labelLeases = language === 'en' ? ['Long-Term Lease', 'Hybrid Layouts', 'Shared Campus'][lVal] : ['දිගුකාලීන බදු', 'දෙමුහුන් ක්‍රම', 'හවුල් පරිශ්‍රය'][lVal];
+    const labelCapex = language === 'en' ? ['Aggressive Spends', 'Selective CapEx', 'Frozen Investments'][cVal] : ['දැඩි ආයෝජන', 'සීමිත ප්‍රාග්ධන', 'අත්හිටුවූ වියදම්'][cVal];
+
+    document.getElementById('terms-val-label').innerText = labelTerms;
+    document.getElementById('leases-val-label').innerText = labelLeases;
+    document.getElementById('capex-val-label').innerText = labelCapex;
+
+    if (step3State.liquidity >= 55 && step3State.growth >= 45 && !step3State.completed) {
+        step3State.completed = true;
+        stepsCompleted[2] = true;
+        updateNavigationUI();
+        triggerSuccessLoop();
+    }
+}
+
+function startFiscalCycle() {
+    initAudio();
+    playClickSfx();
+    if (step4State.completed) return;
+
+    step4State.active = true;
+    step4State.packets = [];
+    step4State.packetsLeft = 9;
+    step4State.spawnTimer = 85; // Initial quick spawn
+    step4State.bins.forEach(b => b.current = 0);
+    
+    updateCycleControlsUI();
+}
+
+function stopFiscalCycle() {
+    initAudio();
+    playClickSfx();
+    step4State.active = false;
+    step4State.packets = [];
+    step4State.packetsLeft = 9;
+    step4State.bins.forEach(b => b.current = 0);
+    
+    updateCycleControlsUI();
+}
+
+function updateCycleControlsUI() {
+    const statusLabel = document.getElementById('cycle-status');
+    const packetsLabel = document.getElementById('cycle-packets');
+
+    if (step4State.active) {
+        statusLabel.innerText = language === 'en' ? 'Executing Cycle...' : 'ක්‍රියාත්මකයි...';
+        statusLabel.className = "font-bold text-emerald-400";
+    } else if (step4State.completed) {
+        statusLabel.innerText = language === 'en' ? 'Balanced! Zero Variance' : 'සමතුලිතයි!';
+        statusLabel.className = "font-bold text-emerald-400 animate-pulse";
+    } else {
+        statusLabel.innerText = language === 'en' ? 'Idle' : 'නිශ්ක්‍රීයයි';
+        statusLabel.className = "font-bold text-[#ffc107]";
+    }
+
+    packetsLabel.innerText = `${step4State.packetsLeft} / 9`;
+}
+
+// Bezier Curve Interpolator
+function getBezierPoint(p0, p1, p2, t) {
+    const x = (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x;
+    const y = (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y;
+    return { x, y };
+}
+
+function updateStep4Packets() {
+    if (!step4State.active) return;
+
+    // Spawn Trigger
+    step4State.spawnTimer++;
+    if (step4State.spawnTimer > 100 && step4State.packetsLeft > 0) {
+        step4State.spawnTimer = 0;
+        step4State.packetsLeft--;
+        step4State.packets.push({
+            x: relativeWidth / 2,
+            y: 20 * scaleMultiplier,
+            t: 0,
+            stage: 0, // 0: drop to Gate 0, 1: curved drop to Gate 1/2, 2: curved drop to Bin
+            path: null,
+            finalBin: null,
+            speed: 0.015
+        });
+        playTone(480, 'sine', 0.08);
+        updateCycleControlsUI();
+    }
+
+    const midX = relativeWidth / 2;
+    const gate0Y = 60 * scaleMultiplier;
+    const gate12Y = 115 * scaleMultiplier;
+    const binY = relativeHeight - 52 * scaleMultiplier;
+
+    for (let i = step4State.packets.length - 1; i >= 0; i--) {
+        const p = step4State.packets[i];
+        p.t += p.speed;
+
+        if (p.stage === 0) {
+            p.x = midX;
+            p.y = 20 * scaleMultiplier + p.t * (gate0Y - 20 * scaleMultiplier);
+            if (p.t >= 1) {
+                p.stage = 1;
+                p.t = 0;
+                p.path = step4State.gates[0].direction; // 'L' or 'R'
+                playTone(550, 'triangle', 0.05);
+            }
+        } else if (p.stage === 1) {
+            const start = { x: midX, y: gate0Y };
+            const end = p.path === 'L' 
+                ? { x: midX - 85 * scaleMultiplier, y: gate12Y }
+                : { x: midX + 85 * scaleMultiplier, y: gate12Y };
+            
+            const ctrl = {
+                x: p.path === 'L' ? midX - 35 * scaleMultiplier : midX + 35 * scaleMultiplier,
+                y: gate0Y + 20 * scaleMultiplier
+            };
+
+            const pt = getBezierPoint(start, ctrl, end, p.t);
+            p.x = pt.x;
+            p.y = pt.y;
+
+            if (p.t >= 1) {
+                p.stage = 2;
+                p.t = 0;
+                if (p.path === 'L') {
+                    p.finalBin = step4State.gates[1].direction === 'L' ? 'mkt' : 'ops';
+                } else {
+                    p.finalBin = step4State.gates[2].direction === 'L' ? 'ops' : 'rent';
+                }
+                playTone(580, 'triangle', 0.05);
+            }
+        } else if (p.stage === 2) {
+            const start = p.path === 'L'
+                ? { x: midX - 85 * scaleMultiplier, y: gate12Y }
+                : { x: midX + 85 * scaleMultiplier, y: gate12Y };
+            
+            let binIndex = 0;
+            if (p.finalBin === 'ops') binIndex = 1;
+            if (p.finalBin === 'rent') binIndex = 2;
+
+            const endBin = step4State.bins[binIndex];
+            const end = {
+                x: endBin.x + endBin.w / 2,
+                y: endBin.y + 10 * scaleMultiplier
+            };
+
+            const ctrl = {
+                x: p.path === 'L'
+                    ? (p.finalBin === 'mkt' ? start.x - 30 * scaleMultiplier : start.x + 30 * scaleMultiplier)
+                    : (p.finalBin === 'ops' ? start.x - 30 * scaleMultiplier : start.x + 30 * scaleMultiplier),
+                y: gate12Y + 25 * scaleMultiplier
+            };
+
+            const pt = getBezierPoint(start, ctrl, end, p.t);
+            p.x = pt.x;
+            p.y = pt.y;
+
+            if (p.t >= 1) {
+                const bin = step4State.bins[binIndex];
+                bin.current += 50;
+                playTone(680, 'sine', 0.1);
+
+                createLandingParticles(p.x, p.y, bin.color);
+                step4State.packets.splice(i, 1);
+
+                if (bin.current > bin.target) {
+                    triggerVarianceFailure(bin);
+                } else {
+                    checkStep4Victory();
+                }
+            }
+        }
+    }
+}
+
+function triggerVarianceFailure(bin) {
+    playTone(180, 'sawtooth', 0.4);
+    step4State.active = false;
+    step4State.packets = [];
+
+    const statusLabel = document.getElementById('cycle-status');
+    statusLabel.innerText = language === 'en' ? 'Unfavorable Variance!' : 'අවාසිදායක විචලනයක්!';
+    statusLabel.className = "font-bold text-red-500 animate-bounce";
+
+    // Fast flash container to notify structural error
+    const originalColor = bin.color;
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => { bin.color = '#ff0000'; }, i * 200);
+        setTimeout(() => { bin.color = originalColor; }, i * 200 + 100);
+    }
+
+    showNotificationToast(
+        language === 'en' ? `${bin.labelEn} overspent past target! Adjust Gates and reset.` : `${bin.labelSi} නියමිත අයවැය සීමාව ඉක්මවා ගොස් ඇත!`
+    );
+}
+
+function showNotificationToast(msg) {
+    const banner = document.createElement('div');
+    banner.className = "fixed top-12 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-bold z-50 shadow-2xl transition-all duration-300";
+    banner.innerText = msg;
+    document.body.appendChild(banner);
+    setTimeout(() => {
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+    }, 2800);
+}
+
+function checkStep4Victory() {
+    const mkt = step4State.bins[0];
+    const ops = step4State.bins[1];
+    const rent = step4State.bins[2];
+
+    if (mkt.current === mkt.target && ops.current === ops.target && rent.current === rent.target) {
+        step4State.active = false;
+        step4State.completed = true;
+        stepsCompleted[3] = true;
+
+        // Unlock Certification badge rewards button
+        const claimBtn = document.getElementById('claim-badge-btn');
+        claimBtn.className = "bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md hover:bg-emerald-400 transition-all pulse-accent";
+        claimBtn.disabled = false;
+
+        updateCycleControlsUI();
+        updateNavigationUI();
+        triggerSuccessLoop();
+    }
+}
+
+let particles = [];
+function createSuccessParticles() {
+    particles = [];
+    const colors = ['#10b981', '#ffc107', '#60a5fa', '#ffffff'];
+    for (let i = 0; i < 35; i++) {
+        particles.push({
+            x: relativeWidth / 2,
+            y: relativeHeight / 2,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6 - 1.5,
+            r: Math.random() * 3.5 + 2,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1,
+            decay: Math.random() * 0.015 + 0.015
+        });
+    }
+}
+
+function createLandingParticles(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4 - 1.2,
+            r: Math.random() * 2 + 1.5,
+            color: color,
+            alpha: 1,
+            decay: Math.random() * 0.03 + 0.02
+        });
+    }
+}
+
+function triggerSuccessLoop() {
+    playSuccessSfx();
+    createSuccessParticles();
+    
+    const overlay = document.getElementById('success-overlay');
+    const toast = document.getElementById('success-toast');
+    
+    overlay.style.opacity = '1';
+    toast.style.transform = 'scale(1)';
+    
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        toast.style.transform = 'scale(0.75)';
+    }, 1800);
+}
+
+function drawLoop() {
+    ctx.clearRect(0, 0, relativeWidth, relativeHeight);
+
+    // Grid rendering background
+    ctx.strokeStyle = 'rgba(30, 58, 138, 0.08)';
+    ctx.lineWidth = 1;
+    const gridSpacing = 20 * scaleMultiplier;
+    for (let x = 0; x < relativeWidth; x += gridSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, relativeHeight);
+        ctx.stroke();
+    }
+    for (let y = 0; y < relativeHeight; y += gridSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(relativeWidth, y);
+        ctx.stroke();
+    }
+
+    if (currentStep === 0) {
+        renderStep1();
+    } else if (currentStep === 1) {
+        renderStep2();
+    } else if (currentStep === 2) {
+        renderStep3();
+    } else if (currentStep === 3) {
+        renderStep4();
+    }
+
+    renderParticles();
+    animFrameId = requestAnimationFrame(drawLoop);
+}
+
+function renderStep1() {
+    step1State.bins.forEach(bin => {
+        ctx.fillStyle = bin.color + '10'; 
+        ctx.strokeStyle = bin.color;
+        ctx.lineWidth = 2;
+        
+        drawRoundRect(ctx, bin.x, bin.y, bin.w, bin.h, 10, true, true);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(9, 10 * scaleMultiplier)}px Inter`;
+        ctx.textAlign = 'center';
+        ctx.fillText(language === 'en' ? bin.labelEn : bin.labelSi, bin.x + bin.w / 2, bin.y + 18 * scaleMultiplier);
+    });
+
+    step1State.items.forEach(item => {
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, item.r, 0, Math.PI * 2);
+        ctx.fillStyle = item.locked ? '#10b981' : item.color;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = item.locked ? 1.5 : 1;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(7, 8 * scaleMultiplier)}px Inter`;
+        ctx.textAlign = 'center';
+        
+        const label = language === 'en' ? item.textEn : item.textSi;
+        ctx.fillText(label, item.x, item.y + 3);
+    });
+}
+
+function renderStep2() {
+    step2State.balanceAngle += (step2State.targetAngle - step2State.balanceAngle) * 0.1;
+
+    const midX = relativeWidth / 2;
+    const baseLineY = relativeHeight - 45 * scaleMultiplier;
+
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 5 * scaleMultiplier;
+    ctx.beginPath();
+    ctx.moveTo(midX, baseLineY);
+    ctx.lineTo(midX, baseLineY - 75 * scaleMultiplier);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(midX, baseLineY - 75 * scaleMultiplier, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffc107';
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(midX, baseLineY - 75 * scaleMultiplier);
+    ctx.rotate(step2State.balanceAngle);
+
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 3 * scaleMultiplier;
+    ctx.beginPath();
+    ctx.moveTo(-100 * scaleMultiplier, 0);
+    ctx.lineTo(100 * scaleMultiplier, 0);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-100 * scaleMultiplier, 0);
+    ctx.lineTo(-100 * scaleMultiplier, 35 * scaleMultiplier);
+    ctx.moveTo(100 * scaleMultiplier, 0);
+    ctx.lineTo(100 * scaleMultiplier, 35 * scaleMultiplier);
+    ctx.stroke();
+
+    ctx.fillStyle = '#60a5fa';
+    drawRoundRect(ctx, -122 * scaleMultiplier, 35 * scaleMultiplier, 44 * scaleMultiplier, 8 * scaleMultiplier, 3, true, false);
+    
+    ctx.fillStyle = step2State.completed ? '#10b981' : '#f87171';
+    drawRoundRect(ctx, 78 * scaleMultiplier, 35 * scaleMultiplier, 44 * scaleMultiplier, 8 * scaleMultiplier, 3, true, false);
+
+    ctx.fillStyle = '#1d4ed8';
+    drawRoundRect(ctx, -114 * scaleMultiplier, 10 * scaleMultiplier, 28 * scaleMultiplier, 25 * scaleMultiplier, 5, true, false);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.max(6, 7 * scaleMultiplier)}px Inter`;
+    ctx.fillText('ASSETS', -100 * scaleMultiplier, 20 * scaleMultiplier);
+    ctx.fillText('100K', -100 * scaleMultiplier, 29 * scaleMultiplier);
+
+    ctx.fillStyle = '#b91c1c';
+    const lHeight = (step2State.liabilities / 100) * 35 * scaleMultiplier;
+    drawRoundRect(ctx, 86 * scaleMultiplier, 35 * scaleMultiplier - lHeight, 13 * scaleMultiplier, lHeight, 2.5, true, false);
+    
+    ctx.fillStyle = '#047857';
+    const eHeight = (step2State.equity / 100) * 35 * scaleMultiplier;
+    drawRoundRect(ctx, 101 * scaleMultiplier, 35 * scaleMultiplier - eHeight, 13 * scaleMultiplier, eHeight, 2.5, true, false);
+
+    ctx.restore();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = `${Math.max(8, 9 * scaleMultiplier)}px Inter`;
+    ctx.fillText(language === 'en' ? 'Accounting Equation Balance Indicator' : 'ගිණුම්කරණ සමීකරණ සමතුලිතතා දර්ශකය', midX, baseLineY + 22 * scaleMultiplier);
+}
+
+function renderStep3() {
+    const midX = relativeWidth / 2;
+    const gaugeY = relativeHeight / 2 - 12 * scaleMultiplier;
+    const r = 38 * scaleMultiplier;
+
+    const liqX = midX - 85 * scaleMultiplier;
+    ctx.beginPath();
+    ctx.arc(liqX, gaugeY, r, Math.PI, 0);
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 9 * scaleMultiplier;
+    ctx.stroke();
+
+    const liqAngle = Math.PI + (Math.PI * (step3State.liquidity / 100));
+    ctx.beginPath();
+    ctx.arc(liqX, gaugeY, r, Math.PI, liqAngle);
+    ctx.strokeStyle = step3State.liquidity >= 55 ? '#10b981' : '#f59e0b';
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.max(11, 13 * scaleMultiplier)}px Inter`;
+    ctx.fillText(`${Math.round(step3State.liquidity)}%`, liqX, gaugeY - 4);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = `${Math.max(8, 9 * scaleMultiplier)}px Inter`;
+    ctx.fillText(language === 'en' ? 'CASH LIQUIDITY' : 'මුදල් ද්‍රවශීලතාවය', liqX, gaugeY + 14 * scaleMultiplier);
+
+    const groX = midX + 85 * scaleMultiplier;
+    ctx.beginPath();
+    ctx.arc(groX, gaugeY, r, Math.PI, 0);
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 9 * scaleMultiplier;
+    ctx.stroke();
+
+    const groAngle = Math.PI + (Math.PI * (step3State.growth / 100));
+    ctx.beginPath();
+    ctx.arc(groX, gaugeY, r, Math.PI, groAngle);
+    ctx.strokeStyle = step3State.growth >= 45 ? '#3b82f6' : '#ef4444';
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.max(11, 13 * scaleMultiplier)}px Inter`;
+    ctx.fillText(`${Math.round(step3State.growth)}%`, groX, gaugeY - 4);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = `${Math.max(8, 9 * scaleMultiplier)}px Inter`;
+    ctx.fillText(language === 'en' ? 'REVENUE GROWTH' : 'ආදායම් වර්ධනය', groX, gaugeY + 14 * scaleMultiplier);
+
+    ctx.font = `bold ${Math.max(9, 10 * scaleMultiplier)}px Inter`;
+    if (step3State.completed) {
+        ctx.fillStyle = '#10b981';
+        ctx.fillText(language === 'en' ? 'GROWTH AND LIQUIDITY BALANCED!' : 'වර්ධනය සහ ද්‍රවශීලතාවය සමතුලිතයි!', midX, relativeHeight - 20 * scaleMultiplier);
+    } else {
+        ctx.fillStyle = '#f87171';
+        ctx.fillText(language === 'en' ? 'RESTORE SAFE CASH BUFFER!' : 'ආරක්ෂිත මුදල් සංචිත ගොඩනගන්න!', midX, relativeHeight - 20 * scaleMultiplier);
+    }
+}
+
+function renderStep4() {
+    updateStep4Packets();
+
+    const midX = relativeWidth / 2;
+    const gate0Y = 60 * scaleMultiplier;
+    const gate12Y = 115 * scaleMultiplier;
+    const binY = relativeHeight - 52 * scaleMultiplier;
+
+    // Draw Route Dashed Guide Pipes
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.12)';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 2 * scaleMultiplier;
+
+    // Emitter pipe to Top Gate
+    ctx.beginPath();
+    ctx.moveTo(midX, 20 * scaleMultiplier);
+    ctx.lineTo(midX, gate0Y);
+    ctx.stroke();
+
+    // Top Gate to left/right Gates
+    ctx.beginPath();
+    ctx.moveTo(midX, gate0Y);
+    ctx.bezierCurveTo(midX - 35 * scaleMultiplier, gate0Y + 20 * scaleMultiplier, midX - 85 * scaleMultiplier, gate12Y - 10 * scaleMultiplier, midX - 85 * scaleMultiplier, gate12Y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(midX, gate0Y);
+    ctx.bezierCurveTo(midX + 35 * scaleMultiplier, gate0Y + 20 * scaleMultiplier, midX + 85 * scaleMultiplier, gate12Y - 10 * scaleMultiplier, midX + 85 * scaleMultiplier, gate12Y);
+    ctx.stroke();
+
+    // Bins paths
+    let bin0 = step4State.bins[0];
+    let bin1 = step4State.bins[1];
+    let bin2 = step4State.bins[2];
+
+    ctx.beginPath();
+    ctx.moveTo(midX - 85 * scaleMultiplier, gate12Y);
+    ctx.bezierCurveTo(midX - 110 * scaleMultiplier, gate12Y + 25 * scaleMultiplier, bin0.x + bin0.w/2, binY - 10 * scaleMultiplier, bin0.x + bin0.w/2, binY);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(midX - 85 * scaleMultiplier, gate12Y);
+    ctx.bezierCurveTo(midX - 55 * scaleMultiplier, gate12Y + 25 * scaleMultiplier, bin1.x + bin1.w/2, binY - 10 * scaleMultiplier, bin1.x + bin1.w/2, binY);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(midX + 85 * scaleMultiplier, gate12Y);
+    ctx.bezierCurveTo(midX + 55 * scaleMultiplier, gate12Y + 25 * scaleMultiplier, bin1.x + bin1.w/2, binY - 10 * scaleMultiplier, bin1.x + bin1.w/2, binY);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(midX + 85 * scaleMultiplier, gate12Y);
+    ctx.bezierCurveTo(midX + 110 * scaleMultiplier, gate12Y + 25 * scaleMultiplier, bin2.x + bin2.w/2, binY - 10 * scaleMultiplier, bin2.x + bin2.w/2, binY);
+    ctx.stroke();
+
+    ctx.setLineDash([]); // Reset dashed state
+
+    // Render Bins Containers
+    step4State.bins.forEach(bin => {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+        ctx.strokeStyle = bin.color;
+        ctx.lineWidth = 2;
+        drawRoundRect(ctx, bin.x, bin.y, bin.w, bin.h, 6, true, true);
+
+        // Target Line Marker
+        ctx.strokeStyle = '#ffc107';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(bin.x, bin.y + 4);
+        ctx.lineTo(bin.x + bin.w, bin.y + 4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#ffc107';
+        ctx.font = `6px Inter`;
+        ctx.textAlign = 'right';
+        ctx.fillText(`Target: ${bin.target}K`, bin.x + bin.w - 4, bin.y - 3);
+
+        // Fill dynamic levels inside
+        if (bin.current > 0) {
+            ctx.fillStyle = bin.color + '40';
+            const fillHeight = Math.min(1, bin.current / bin.target) * (bin.h - 6);
+            drawRoundRect(ctx, bin.x + 2, bin.y + bin.h - fillHeight - 2, bin.w - 4, fillHeight, 4, true, false);
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(7, 8 * scaleMultiplier)}px Inter`;
+        ctx.textAlign = 'center';
+        ctx.fillText(language === 'en' ? bin.labelEn : bin.labelSi, bin.x + bin.w / 2, bin.y + 11 * scaleMultiplier);
+        ctx.fillText(`${bin.current}K / ${bin.target}K`, bin.x + bin.w / 2, bin.y + 23 * scaleMultiplier);
+    });
+
+    // Render Diverter Gates Switches
+    step4State.gates.forEach(gate => {
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(gate.x, gate.y, 6 * scaleMultiplier, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(gate.x, gate.y);
+        const angle = gate.direction === 'L' ? -Math.PI / 6 : Math.PI / 6;
+        ctx.rotate(angle);
+
+        ctx.fillStyle = '#64748b';
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        drawRoundRect(ctx, -gate.w/2, -gate.h/2, gate.w, gate.h, 2, true, true);
+        ctx.restore();
+
+        // Arrow LED pointers
+        ctx.fillStyle = '#ffc107';
+        ctx.font = '9px Inter';
+        ctx.textAlign = 'center';
+        const ptr = gate.direction === 'L' ? '◀' : '▶';
+        ctx.fillText(ptr, gate.x, gate.y - 9 * scaleMultiplier);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '7px Inter';
+        ctx.fillText(language === 'en' ? gate.labelEn : gate.labelSi, gate.x, gate.y + 16 * scaleMultiplier);
+    });
+
+    // Render Resource Packets Falling
+    step4State.packets.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 7 * scaleMultiplier, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffc107';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0b1b3d';
+        ctx.font = `bold ${Math.max(6, 7 * scaleMultiplier)}px Inter`;
+        ctx.textAlign = 'center';
+        ctx.fillText('50K', p.x, p.y + 2.5 * scaleMultiplier);
+    });
+}
+
+function renderParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+        
+        if (p.alpha <= 0) {
+            particles.splice(i, 1);
+            continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// Rounded box utility helper
+function drawRoundRect(c, x, y, width, height, radius, fill, stroke) {
+    if (height <= 0) return; 
+    c.beginPath();
+    c.moveTo(x + radius, y);
+    c.lineTo(x + width - radius, y);
+    c.quadraticCurveTo(x + width, y, x + width, y + radius);
+    c.lineTo(x + width, y + height - radius);
+    c.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    c.lineTo(x + radius, y + height);
+    c.quadraticCurveTo(x, y + height, x, y + height - radius);
+    c.lineTo(x, y + radius);
+    c.quadraticCurveTo(x, y, x + radius, y);
+    c.closePath();
+    if (fill) c.fill();
+    if (stroke) c.stroke();
+}
+
+function switchStep(index) {
+    if (index === currentStep) return;
+    initAudio();
+    playClickSfx();
+    stopFiscalCycle(); // Pause active Step 4 executions when leaving slides
+    
+    const oldCard = document.getElementById(`card-${currentStep}`);
+    const newCard = document.getElementById(`card-${index}`);
+    
+    if (index > currentStep) {
+        oldCard.style.transform = 'translateX(-100%)';
+        newCard.style.transform = 'translateX(0)';
+    } else {
+        oldCard.style.transform = 'translateX(100%)';
+        newCard.style.transform = 'translateX(0)';
+    }
+
+    for (let i = 0; i < 4; i++) {
+        if (i !== index && i !== currentStep) {
+            const card = document.getElementById(`card-${i}`);
+            if (i < index) {
+                card.style.transform = 'translateX(-100%)';
+            } else {
+                card.style.transform = 'translateX(100%)';
+            }
+        }
+    }
+
+    currentStep = index;
+    updateInstructionsHint();
+    updateNavigationUI();
+    setupCanvasDimensions();
+}
+
+function updateNavigationUI() {
+    for (let i = 0; i < 4; i++) {
+        const tab = document.getElementById(`tab-${i}`);
+        const checkmark = stepsCompleted[i] ? "✓ " : "";
+        const baseLabel = trnDict[language][`tab-${i + 1}`];
+        tab.innerHTML = `${checkmark}${baseLabel}`;
+        
+        if (i === currentStep) {
+            tab.className = "flex-1 py-1 text-center text-[10px] sm:text-xs font-semibold border-b-2 border-[#ffc107] text-[#ffc107] transition-all truncate";
+        } else {
+            tab.className = "flex-1 py-1 text-center text-[10px] sm:text-xs font-semibold border-b-2 border-transparent text-gray-400 transition-all truncate";
+        }
+    }
+
+    // Refresh claim button styles based on validation array
+    const claimBtn = document.getElementById('claim-badge-btn');
+    if (stepsCompleted.every(status => status)) {
+        claimBtn.className = "bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md hover:bg-emerald-400 transition-all pulse-accent";
+        claimBtn.disabled = false;
+    } else {
+        claimBtn.className = "bg-gray-600 cursor-not-allowed text-gray-400 font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-1 shadow-md transition-all";
+        claimBtn.disabled = false; 
+    }
+}
+
+function nextStep() {
+    if (currentStep < 3) {
+        switchStep(currentStep + 1);
+    } else {
+        openCertificationModal();
+    }
+}
+
+function toggleExpand(idx) {
+    playClickSfx();
+    const body = document.getElementById(`expand-body-${idx}`);
+    const icon = document.getElementById(`expand-icon-${idx}`);
+    if (body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        icon.innerText = '▲';
+    } else {
+        body.classList.add('hidden');
+        icon.innerText = '▼';
+    }
+}
+
+function openCertificationModal() {
+    initAudio();
+    const allActivitiesDone = stepsCompleted.every(status => status);
+    
+    if (!allActivitiesDone) {
+        openLockModal();
+        return;
+    }
+
+    playSuccessSfx();
+    const modal = document.getElementById('cert-modal');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.add('opacity-100');
+    }, 15);
+}
+
+function closeCertificationModal() {
+    playClickSfx();
+    const modal = document.getElementById('cert-modal');
+    modal.classList.remove('opacity-100');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function openLockModal() {
+    playTone(220, 'sawtooth', 0.15);
+    const modal = document.getElementById('lock-modal');
+    const reportList = document.getElementById('lock-report-list');
+    
+    // Clear list
+    reportList.innerHTML = '';
+    
+    // Append verification checks list matching translation matrix
+    for (let i = 0; i < 4; i++) {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between py-0.5 border-b border-gray-800/45";
+        const statusIcon = stepsCompleted[i] ? "<span class='text-emerald-500'>✔ Ready</span>" : "<span class='text-red-500'>✖ Locked</span>";
+        const labelText = trnDict[language][`lock-s${i+1}`];
+        item.innerHTML = `<span>${labelText}</span> ${statusIcon}`;
+        reportList.appendChild(item);
+    }
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.add('opacity-100');
+    }, 15);
+}
+
+function closeLockModal() {
+    playClickSfx();
+    const modal = document.getElementById('lock-modal');
+    modal.classList.remove('opacity-100');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function shareCert() {
+    playClickSfx();
+    const tokenID = `OBISL-BADGE-FLM-${Math.floor(Math.random() * 90000 + 10000)}`;
+    
+    const tempInput = document.createElement('input');
+    tempInput.value = tokenID;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+
+    // Dynamic toast overlay replacing window alerts
+    const banner = document.createElement('div');
+    banner.className = "fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded-xl text-xs font-bold z-50 shadow-2xl transition-all duration-300";
+    banner.innerText = language === 'en' ? `Verification Token Copied: ${tokenID}` : `සත්‍යාපන කේතය පිටපත් කරන ලදී: ${tokenID}`;
+    document.body.appendChild(banner);
+    setTimeout(() => {
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+    }, 2500);
+}
+
+// Run loop upon loaded validation checks
+window.onload = function () {
+    canvas.addEventListener('mousedown', onInputDown);
+    canvas.addEventListener('mousemove', onInputMove);
+    canvas.addEventListener('mouseup', onInputUp);
+
+    canvas.addEventListener('touchstart', onInputDown, { passive: false });
+    canvas.addEventListener('touchmove', onInputMove, { passive: false });
+    canvas.addEventListener('touchend', onInputUp, { passive: false });
+
+    setupCanvasDimensions();
+
+    onCalibrateSlider();
+    onOptimizationSlider();
+    updateCycleControlsUI();
+
+    drawLoop();
+};
+</script>
+</body>
+</html>
